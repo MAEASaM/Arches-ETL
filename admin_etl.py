@@ -47,7 +47,7 @@ def match_length(attr_list, attr_type_list):
 
 # write the output file in Arches input format
 with open('data/Admin resource model modifed.csv', 'w') as f:
-    writer = csv.writer(f, delimiter=',')
+    writer = csv.writer(f, delimiter=',',quoting=csv.QUOTE_ALL)
     writer.writerow(['ResourceID','Name Type','Resource created at','Resource last modified at','MAEASaM ID','Comment','Name Value','Geometry','Description','Level'])
     
     for row in reader:
