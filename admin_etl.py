@@ -3,6 +3,7 @@
 # import modules
 import csv
 import uuid
+
 # read the input csv as a list of dicts
 reader = csv.DictReader(open('data/Admin resource model.xlsx.csv'), delimiter=';')
 
@@ -47,10 +48,13 @@ def match_length(attr_list, attr_type_list):
 # write the output file in Arches input format
 with open('data/Admin resource model modifed.csv', 'w') as f:
     writer = csv.writer(f, delimiter=',')
-    writer.writerow(['Name Type','Resource created at','Resource last modified at','MAEASaM ID','Comment','Name Value','Geometry','Description','Level'])
+    writer.writerow(['ResourceID','Name Type','Resource created at','Resource last modified at','MAEASaM ID','Comment','Name Value','Geometry','Description','Level'])
+    
     for row in reader:
+        
         # get the id of the row
-        ID=row['MAEASaM ID'].strip()
+        ID=str(uuid.uuid4())
+        
         # split the name values and types and count them
         name_list = [name.strip() for name in row['Name Value'].split(',') if '?' not in name]
         name_type_list = split_row_to_cards(row['Name Type'])
@@ -58,11 +62,12 @@ with open('data/Admin resource model modifed.csv', 'w') as f:
             name_list, name_type_list = match_length(name_list, name_type_list)
         print(f'outside the list {name_list}, {name_type_list}')
         no_rows_per_resource = max([len(name_list), len(name_type_list)])
-        # write the row for each name value
-        writer.writerow([name_type_list[0],row['Resource created at'],row['Resource last modified at '],ID,row['Comment'],name_list[0],row['Geometry'],row['Description'],row['Level']])
+        
+        # write the first row of the resource
+        writer.writerow([ID,name_type_list[0],row['Resource created at'],row['Resource last modified at '],row['MAEASaM ID'],row['Comment'],name_list[0],row['Geometry'],row['Description'],row['Level']])
 
         # write the rest of the rows
         if no_rows_per_resource > 1:
             for i in range(1,no_rows_per_resource):
-                writer.writerow([name_type_list[i],'','',ID,'',name_list[i],'','',''])
+                writer.writerow([ID,name_type_list[i],'','','','',name_list[i],'','',''])
         
