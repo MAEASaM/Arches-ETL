@@ -3,9 +3,10 @@
 # import modules
 import csv
 import uuid
+from geomet import wkt
 
 # read the input csv as a list of dicts
-reader = csv.DictReader(open('data/Admin resource model.xlsx.csv'), delimiter=';')
+reader = csv.DictReader(open('data/Admin resource model_data_RHVM.csv'), delimiter=';')
 
 def split_row_to_cards(attr):
     #split row into cards   
@@ -52,6 +53,12 @@ with open('data/Admin resource model modifed.csv', 'w') as f:
     
     for row in reader:
         
+        # check if geometry is valid
+        try:
+            geo_checker = wkt.loads(row['Geometry'])
+        except:
+            continue
+
         # get the id of the row
         ID=str(uuid.uuid4())
         
