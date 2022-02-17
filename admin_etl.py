@@ -2,9 +2,9 @@
 
 # import modules
 import csv
-
+import uuid
 # read the input csv as a list of dicts
-reader = csv.DictReader(open('Admin resource model.xlsx.csv'), delimiter=';')
+reader = csv.DictReader(open('data/Admin resource model.xlsx.csv'), delimiter=';')
 
 def split_row_to_cards(attr):
     #split row into cards   
@@ -45,7 +45,7 @@ def match_length(attr_list, attr_type_list):
     return(attr_list, attr_type_list)
 
 # write the output file in Arches input format
-with open('Admin resource model modifed.csv', 'w') as f:
+with open('data/Admin resource model modifed.csv', 'w') as f:
     writer = csv.writer(f, delimiter=',')
     writer.writerow(['Name Type','Resource created at','Resource last modified at','MAEASaM ID','Comment','Name Value','Geometry','Description','Level'])
     for row in reader:
