@@ -3,9 +3,10 @@
 # import modules
 import csv
 import uuid
+from itertools import tee
+
 from dateutil import parser
 from geomet import wkt
-from itertools import tee
 
 # read the input csv as a list of dicts
 reader = csv.DictReader(open('data/Admin resource model.xlsx.csv'), delimiter=';')
