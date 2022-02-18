@@ -3,10 +3,11 @@
 # import modules
 import csv
 import uuid
+from dateutil import parser
 from geomet import wkt
 
 # read the input csv as a list of dicts
-reader = csv.DictReader(open('data/Admin resource model_data_RHVM.csv'), delimiter=';')
+reader = csv.DictReader(open('data/Admin resource model.xlsx.csv'), delimiter=';')
 
 def split_row_to_cards(attr):
     #split row into cards   
@@ -46,6 +47,9 @@ def match_length(attr_list, attr_type_list):
     print(f'inside the function: {attr_list}, {attr_type_list}')
     return(attr_list, attr_type_list)
 
+# list incompelte geometry
+faulty_geom_id = []
+
 # write the output file in Arches input format
 with open('data/Admin resource model modifed.csv', 'w') as f:
     writer = csv.writer(f, delimiter=',',quoting=csv.QUOTE_ALL)
@@ -57,6 +61,7 @@ with open('data/Admin resource model modifed.csv', 'w') as f:
         try:
             geo_checker = wkt.loads(row['Geometry'])
         except:
+            faulty_geom_id.append(row['MAEASaM ID'])
             continue
 
         # get the id of the row
@@ -70,11 +75,22 @@ with open('data/Admin resource model modifed.csv', 'w') as f:
         print(f'outside the list {name_list}, {name_type_list}')
         no_rows_per_resource = max([len(name_list), len(name_type_list)])
         
+        # fix date format
+        date_created = parser.parse(row['Resource created at']).strftime('%Y-%m-%d')
+        date_modified = parser.parse(row['Resource last modified at ']).strftime('%Y-%m-%d')
+
         # write the first row of the resource
-        writer.writerow([ID,name_type_list[0],row['Resource created at'],row['Resource last modified at '],row['MAEASaM ID'],row['Comment'],name_list[0],row['Geometry'],row['Description'],row['Level']])
+        writer.writerow([ID,name_type_list[0],date_created,date_modified,row['MAEASaM ID'],row['Comment'],name_list[0],row['Geometry'],row['Description'],row['Level']])
 
         # write the rest of the rows
         if no_rows_per_resource > 1:
             for i in range(1,no_rows_per_resource):
                 writer.writerow([ID,name_type_list[i],'','','','',name_list[i],'','',''])
+
+# write the list of faulty geometry ids
+with open('data/faulty_geom_id.csv', 'w') as f:
+    writer = csv.writer(f, delimiter=',',quoting=csv.QUOTE_ALL)
+    writer.writerow(['MAEASaM ID'])
+    for i in faulty_geom_id:
+        writer.writerow([i])
         
