@@ -87,6 +87,10 @@ with open('data/Admin resource model modifed.csv', 'w') as f:
             faulty_geom_id.append(row['MAEASaM ID'])
             faulty_geom_counter += 1
             continue
+        
+        # change Primary Name to Official Name
+        if row['Name Type'] == 'Primary':
+            row['Name Type'] = 'Official'
 
         # get the id of the row
         ID=str(uuid.uuid4())
