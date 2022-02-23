@@ -2,9 +2,12 @@
 import os
 import processing
 from qgis.core import QgsVectorLayer
+from pathlib import Path
 
 # set parent folder
-parent_folder = ''
+str_path = "C:\\Users\\razek\\Downloads\\arches_admin_convert"
+parent_folder = Path(str_path)
+print(parent_folder)
 
 # set country or group of countries
 group_of_countries = True
@@ -38,27 +41,27 @@ Stage One:
    divide each polygon into smaller polygons and save them in geojson format 
 '''
 for country in list_of_countries:
-    country_name = country.split('/')[-1]
+    country_name = country.split('\\')[-1]
     print(f'processing {country_name}')
     subfolders = list_folders(country)
     for subfolder in subfolders:
-        folder_name = subfolder.split('/')[-1]
-        print(f'processing {folder_name}')
+        folder_name = subfolder.split('\\')[-1]
+        print(f'processing folder: {folder_name}')
         if folder_name == 'Districts':
             districts = list_files(subfolder, extension = '_subdivided.json.geojson', include = False) 
             for district in districts:
-                district_name = district.split('/')[-1]
+                district_name = district.split('\\')[-1]
                 print('processing: ' + country_name + ' - ' + district_name)
                 district_layer = QgsVectorLayer(district,"distr","ogr")
                 processing.run("native:subdivide", {'INPUT': district_layer, "MAX_NODES":MAX_NODES, "OUTPUT":district[:-4]+'_subdivided.json'})
-        if folder_name == 'sub-districts':
-            sub_districts_folders = list_files(subfolder, extension = '_subdivided.json.geojson', include = False)
+        if folder_name == 'sub_districts':
+            sub_districts_folders = list_folders(subfolder)
             for sub_districts_folder in sub_districts_folders:
-                district_name = sub_districts_folder.split('/')[-1]
+                district_name = sub_districts_folder.split('\\')[-1]
                 print('processing: sub districts of' + country_name + ' - ' + district_name)
-                sub_districts_files = list_files(sub_districts_folder)
+                sub_districts_files = list_files(sub_districts_folder, extension = '_subdivided.json.geojson', include = False)
                 for sub_districts_file in sub_districts_files:
-                    sub_districts_name = sub_districts_file.split('/')[-1]
+                    sub_districts_name = sub_districts_file.split('\\')[-1]
                     print('processing: ' + country_name + ' - ' + district_name + ' - ' + sub_districts_name)
                     sub_districts_layer = QgsVectorLayer(sub_districts_file,"sub_distr","ogr")
                     processing.run("native:subdivide", {'INPUT': sub_districts_layer, "MAX_NODES":MAX_NODES, "OUTPUT":sub_districts_file[:-4]+'_subdivided.json'})
