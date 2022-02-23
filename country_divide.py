@@ -4,7 +4,7 @@ import processing
 from qgis.core import QgsVectorLayer
 
 # set parent folder
-parent_folder = '/home/geo/Desktop/codebase/Arches-ETL/data/countries'
+parent_folder = ''
 
 # set country or group of countries
 group_of_countries = True
