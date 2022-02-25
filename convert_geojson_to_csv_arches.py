@@ -7,7 +7,7 @@ import pandas as pd
 from shapely.geometry import shape
 
 # set parent folder
-parent_folder = 'C:\\Users\\Renier\\Desktop\\Admin_model_corrected_geometries\\country'
+parent_folder = ''
 
 # set the output file
 outputfile = os.path.join(parent_folder, 'Arches_export.csv')
