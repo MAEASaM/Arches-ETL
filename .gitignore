@@ -130,3 +130,9 @@ dmypy.json
 
 # data
 /data
+
+# csv files
+*.csv
+
+# ds_store
+.DS_Store
