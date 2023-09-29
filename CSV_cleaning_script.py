@@ -1,6 +1,13 @@
 ### This script is used to clean the CSV files for the Arches upload
 ### The script is written by Renier Van Der Merwe and Mahmoud Abdelrazek
 
+### TODO:
+# 1. Refactor actor_uuid_format function to generate the actor dict only once
+# 2. Add check for the geomtry and fix duplicate point problem
+# 3. split the filtering function to aliases and data fixes
+# 4. generalise the script to work with other csv files
+
+
 
 # Data sheets
 input_csv_file = "E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote sensing\Sudan_BulkUploadTrial.csv"
@@ -36,7 +43,6 @@ def write_output_csv(file_reader: csv.DictReader) -> None:
                 row["ResourceID"] = row["MAEASaM ID"]
 
             row = data_filter(row)
-            # Convert "Survey Date" column date format from %d/%m/%Y to %Y-%m-%d
             row = date_format_all_coloums(row)
             row = actor_uuid_format(row)
             writer.writerow(row)
@@ -119,6 +125,7 @@ def date_format_all_coloums(row: dict) -> dict:
     row["Threat assessment date"] = convert_date_format(row["Threat assessment date"])
     row["Image used date"] = convert_date_format(row["Image used date"])
     return row
+
 
 def actor_uuid_format(row: dict) -> dict:
     uuid_user_dict = {}
