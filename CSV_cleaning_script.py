@@ -47,6 +47,12 @@ def data_filter(row):
         row["Evidence"] = "Soil mark"
     if row["Evidence"] == "Complex Enclosure":
         row["Evidence"] = "Complex enclosure"
+    if row["Evidence"] == "Complex enclosures":
+        row["Evidence"] = "Complex enclosure"
+    if row["Evidence"] == "Stone Circle":
+        row["Evidence"] = "Stone circle"
+    if row["Evidence"] == "Complex Structure":
+        row["Evidence"] = "Complex structure"
     if row["Image Type"] == "CNES / Airbus":
         row["Image Type"] = "CNES Airbus"
     if row["Image Type"] == "Bung":
@@ -73,6 +79,12 @@ def data_filter(row):
         row["Threat type"] = "War"
     if row["Threat type"] == "Occupation expansion":
         row["Threat type"] = "Urbanisation"
+    if row["Evidence Shape"] == "Ring":
+        row["Evidence Shape"] = "Circular"
+    if row["Ground truthed"] == "#REF!":
+        row["Ground truthed"] = "No"
+    if row["Land use land cover"] == "Built-up":
+        row["Land use land cover"] = "Built up"
     return row
 
 def convert_date_format(date_str):
@@ -89,6 +101,7 @@ def date_format_all_coloums(row):
     row["Survey Date"] = convert_date_format(row["Survey Date"])
     row["Date of imagery"] = convert_date_format(row["Date of imagery"])
     row["Date of imagery"] = row["Date of imagery"].replace("20XX", row["Survey Date"])
+    row["Date of imagery"] = row["Date of imagery"].replace("1900-01-00", row["Survey Date"])
     row["Threat assessment date"] = convert_date_format(row["Threat assessment date"])
     row["Image used date"] = convert_date_format(row["Image used date"])
     return row
