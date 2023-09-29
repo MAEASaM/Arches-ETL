@@ -10,19 +10,29 @@
 
 
 # Data sheets
-input_csv_file = "E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote sensing\Sudan_BulkUploadTrial.csv"
-output_csv_file = "E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote sensing\SudanBulkUploadEdElias2023_newGeoRH.csv"
-actor_csv_file = "E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote sensing\Actor.csv"
+input_csv_file = "Sudan_BulkUploadTrial (1).csv"
+output_csv_file = "sudan_modified.csv"
+actor_csv_file = "Actor.csv"
 
 
 import csv
 from datetime import datetime
+import pathlib
+
+# find the path of the script
+script_path = pathlib.Path(__file__).parent.absolute()
+
+# add script path to the csv files
+input_csv_file = str(script_path) + "/" + input_csv_file
+output_csv_file = str(script_path) + "/" + output_csv_file
+actor_csv_file = str(script_path) + "/" + actor_csv_file
+
 
 def read_input_csv() -> csv.DictReader:
     with open(input_csv_file, 'r') as input_csv_file_object:
         input_csv_file_object_reader = csv.DictReader(input_csv_file_object)
-
-        return input_csv_file_object_reader
+        write_output_csv(input_csv_file_object_reader)
+        # return input_csv_file_object_reader
 
 def read_actor_uuid_csv() -> dict:
     actor_uuid_dict = {}
@@ -59,6 +69,7 @@ def write_output_csv(file_reader: csv.DictReader) -> None:
             row = data_filter(row)
             row = date_format_all_coloums(row)
             row = actor_uuid_format(row, actor_uuid_dict)
+            row = clean_geomtry_based_on_type(row)
             writer.writerow(row)
 
 
@@ -198,4 +209,4 @@ def remove_duplicate_points_from_multipolygon(wkt_geometry: str) -> str:
     return cleaned_wkt
 
 if __name__ == '__main__':
-    write_output_csv(read_input_csv())
+    read_input_csv()
