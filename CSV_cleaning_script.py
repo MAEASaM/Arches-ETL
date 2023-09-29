@@ -21,6 +21,7 @@ from datetime import datetime
 def read_input_csv() -> csv.DictReader:
     with open(input_csv_file, 'r') as input_csv_file_object:
         input_csv_file_object_reader = csv.DictReader(input_csv_file_object)
+
         return input_csv_file_object_reader
 
 def read_actor_uuid_csv() -> dict:
@@ -140,12 +141,27 @@ def date_format_all_coloums(row: dict) -> dict:
     return row
 
 
-
 def actor_uuid_format(row: dict, actor_uuid_dict) -> dict:
     row["Surveyor Name"] = "[{'resourceId': '"+ actor_uuid_dict[row["Surveyor Name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
     row["Threat assessor name"] = "[{'resourceId': '"+ actor_uuid_dict[row["Threat assessor name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
 
     return row
+
+def clean_geomtry_based_on_type(row: dict) -> dict:
+    geometry = row["Geometry"]
+    if geometry:
+        geometry_type = geometry.split(" ")[0]
+        if geometry_type == "POINT":
+            return row
+        elif geometry_type == "MULTIPOLYGON":
+            row["Geometry"] = remove_duplicate_points_from_multipolygon(geometry)
+            return row
+        else:
+            print("Unknown geometry type: " + geometry_type)
+        
+
+def remove_duplicate_points_from_multipolygon(geometry: str) -> str:
+    return geometry
 
 if __name__ == '__main__':
     write_output_csv(read_input_csv())
