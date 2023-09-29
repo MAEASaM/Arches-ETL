@@ -18,6 +18,10 @@ actor_csv_file = "Actor.csv"
 import csv
 from datetime import datetime
 import pathlib
+from shapely import wkt
+from shapely.geometry import MultiPolygon, Polygon, Point
+
+
 
 # find the path of the script
 script_path = pathlib.Path(__file__).parent.absolute()
@@ -155,7 +159,6 @@ def date_format_all_coloums(row: dict) -> dict:
 def actor_uuid_format(row: dict, actor_uuid_dict) -> dict:
     row["Surveyor Name"] = "[{'resourceId': '"+ actor_uuid_dict[row["Surveyor Name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
     row["Threat assessor name"] = "[{'resourceId': '"+ actor_uuid_dict[row["Threat assessor name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
-
     return row
 
 def clean_geomtry_based_on_type(row: dict) -> dict:
@@ -165,48 +168,49 @@ def clean_geomtry_based_on_type(row: dict) -> dict:
         if geometry_type == "POINT":
             return row
         elif geometry_type == "MULTIPOLYGON":
-            row["Geometry"] = remove_duplicate_points_from_multipolygon(geometry)
-            print(row["ResourceID"] + " has been cleaned")
+            print(row["ResourceID"] + " is a multipolygon")
+            row["Geometry"] = remove_duplicate_points(geometry)
             return row
         else:
             print("Unknown geometry type: " + geometry_type)
+    else:
+        return row
 
-# Function to parse a WKT geometry into a list of lists of coordinates
-def parse_multipolygon_wkt(wkt):
-    # Split the WKT into parts
-    parts = wkt.strip().split("((")[1].split("))")[0].split("), (")
+def remove_duplicate_points(geometry_wkt):
+    if not geometry_wkt:
+        return ''
+    
+    if type(geometry_wkt) == str:
+        geometry = wkt.loads(geometry_wkt)
+    else:
+        geometry = geometry_wkt
 
-    # Parse each part into a list of coordinates
-    coordinates = []
-    for part in parts:
-        polygon_coords = []
-        for point in part.split(", "):
-            x, y = map(float, point.split(" "))
-            polygon_coords.append((x, y))
-        coordinates.append(polygon_coords)
-    return coordinates
-
-
-def remove_duplicate_points_from_multipolygon(wkt_geometry: str) -> str:
-    coordinates = parse_multipolygon_wkt(wkt_geometry)
-    seen_coordinates = set()
-    cleaned_coordinates = []
-
-    for polygon_coords in coordinates:
-        cleaned_polygon = []
-        for coord in polygon_coords:
-            if coord not in seen_coordinates:
-                cleaned_polygon.append(coord)
-                seen_coordinates.add(coord)
-        cleaned_coordinates.append(cleaned_polygon)
-
-    # Reconstruct the cleaned WKT
-    cleaned_wkt = "MULTIPOLYGON ("
-    for polygon_coords in cleaned_coordinates:
-        cleaned_wkt += "({}), ".format(", ".join(f"{x} {y}" for x, y in polygon_coords))
-    cleaned_wkt = cleaned_wkt.rstrip(", ") + ")"
-
-    return cleaned_wkt
+    seen_points = set()
+    
+    if isinstance(geometry, MultiPolygon):
+        new_polygons = []
+        for polygon in geometry.geoms:
+            new_polygon = remove_duplicate_points(polygon)
+            new_polygons.append(new_polygon)
+        return MultiPolygon(new_polygons)
+    elif isinstance(geometry, Polygon):
+        new_exterior = []
+        for point in geometry.exterior.coords:
+            if point not in seen_points:
+                seen_points.add(point)
+                new_exterior.append(point)
+        new_interiors = []
+        for interior in geometry.interiors:
+            new_interior = []
+            for point in interior.coords:
+                if point not in seen_points:
+                    seen_points.add(point)
+                    new_interior.append(point)
+            new_interiors.append(new_interior)
+        
+        return Polygon(shell=new_exterior, holes=new_interiors)
+    else:
+        return geometry
 
 if __name__ == '__main__':
     read_input_csv()
