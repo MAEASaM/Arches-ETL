@@ -8,17 +8,17 @@ output_csv_file = "E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote 
 actor_csv_file = "E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote sensing\Actor.csv"
 
 
-
-
 import csv
 from datetime import datetime
 
-def read_data():
-    with open(input_csv_file, 'r') as sudan_original_trial_file:
-        sudan_original_trial_reader = csv.DictReader(sudan_original_trial_file)
-        writing_csv(sudan_original_trial_reader)
+def read_input_csv():
+    with open(input_csv_file, 'r') as input_csv_file_object:
+        input_csv_file_object_reader = csv.DictReader(input_csv_file_object)
+        return input_csv_file_object_reader
+        
 
-def writing_csv(file_reader):
+
+def write_output_csv(file_reader):
     with open(output_csv_file,'w') as sudan_geometry_overwritten:
         fieldnames = file_reader.fieldnames
         fieldnames = ["ResourceID"] + fieldnames
@@ -126,4 +126,4 @@ def actor_uuid_format(row):
     return row
 
 if __name__ == '__main__':
-    read_data()
+    write_output_csv(read_input_csv())
