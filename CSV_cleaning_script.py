@@ -23,6 +23,16 @@ def read_input_csv() -> csv.DictReader:
         input_csv_file_object_reader = csv.DictReader(input_csv_file_object)
         return input_csv_file_object_reader
 
+def read_actor_uuid_csv() -> dict:
+    actor_uuid_dict = {}
+    with open(actor_csv_file, 'r') as actor_uuid_file_object:
+        actor_uuid_file_object_reader = csv.DictReader(actor_uuid_file_object)
+        for uuid_row in actor_uuid_file_object_reader:
+            actor_uuid_dict[uuid_row["Name value"]] = uuid_row["resourceid"]
+
+    return actor_uuid_dict
+
+
 def check_for_resource_id_column(file_reader: csv.DictReader) -> bool:
     return "ResourceID" in file_reader.fieldnames     
 
@@ -30,7 +40,7 @@ def write_output_csv(file_reader: csv.DictReader) -> None:
     with open(output_csv_file,'w') as sudan_geometry_overwritten:
         
         # read actor uuid csv
-        uuid_user_dict = read_actor_uuid_csv()
+        actor_uuid_dict = read_actor_uuid_csv()
 
         fieldnames = file_reader.fieldnames
         missing_resource_id = check_for_resource_id_column(file_reader)
@@ -47,7 +57,7 @@ def write_output_csv(file_reader: csv.DictReader) -> None:
 
             row = data_filter(row)
             row = date_format_all_coloums(row)
-            row = actor_uuid_format(row, uuid_user_dict)
+            row = actor_uuid_format(row, actor_uuid_dict)
             writer.writerow(row)
 
 
@@ -130,18 +140,10 @@ def date_format_all_coloums(row: dict) -> dict:
     return row
 
 
-def read_actor_uuid_csv() -> dict:
-    uuid_user_dict = {}
-    with open(actor_csv_file, 'r') as actor_uuid_file:
-        actor_uuid_reader = csv.DictReader(actor_uuid_file)
-        for uuid_row in actor_uuid_reader:
-            uuid_user_dict[uuid_row["Name value"]] = uuid_row["resourceid"]
 
-    return uuid_user_dict
-
-def actor_uuid_format(row: dict, uuid_user_dict) -> dict:
-    row["Surveyor Name"] = "[{'resourceId': '"+ uuid_user_dict[row["Surveyor Name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
-    row["Threat assessor name"] = "[{'resourceId': '"+ uuid_user_dict[row["Threat assessor name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
+def actor_uuid_format(row: dict, actor_uuid_dict) -> dict:
+    row["Surveyor Name"] = "[{'resourceId': '"+ actor_uuid_dict[row["Surveyor Name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
+    row["Threat assessor name"] = "[{'resourceId': '"+ actor_uuid_dict[row["Threat assessor name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
 
     return row
 
