@@ -155,13 +155,47 @@ def clean_geomtry_based_on_type(row: dict) -> dict:
             return row
         elif geometry_type == "MULTIPOLYGON":
             row["Geometry"] = remove_duplicate_points_from_multipolygon(geometry)
+            print(row["ResourceID"] + " has been cleaned")
             return row
         else:
             print("Unknown geometry type: " + geometry_type)
-        
 
-def remove_duplicate_points_from_multipolygon(geometry: str) -> str:
-    return geometry
+# Function to parse a WKT geometry into a list of lists of coordinates
+def parse_multipolygon_wkt(wkt):
+    # Split the WKT into parts
+    parts = wkt.strip().split("((")[1].split("))")[0].split("), (")
+
+    # Parse each part into a list of coordinates
+    coordinates = []
+    for part in parts:
+        polygon_coords = []
+        for point in part.split(", "):
+            x, y = map(float, point.split(" "))
+            polygon_coords.append((x, y))
+        coordinates.append(polygon_coords)
+    return coordinates
+
+
+def remove_duplicate_points_from_multipolygon(wkt_geometry: str) -> str:
+    coordinates = parse_multipolygon_wkt(wkt_geometry)
+    seen_coordinates = set()
+    cleaned_coordinates = []
+
+    for polygon_coords in coordinates:
+        cleaned_polygon = []
+        for coord in polygon_coords:
+            if coord not in seen_coordinates:
+                cleaned_polygon.append(coord)
+                seen_coordinates.add(coord)
+        cleaned_coordinates.append(cleaned_polygon)
+
+    # Reconstruct the cleaned WKT
+    cleaned_wkt = "MULTIPOLYGON ("
+    for polygon_coords in cleaned_coordinates:
+        cleaned_wkt += "({}), ".format(", ".join(f"{x} {y}" for x, y in polygon_coords))
+    cleaned_wkt = cleaned_wkt.rstrip(", ") + ")"
+
+    return cleaned_wkt
 
 if __name__ == '__main__':
     write_output_csv(read_input_csv())
