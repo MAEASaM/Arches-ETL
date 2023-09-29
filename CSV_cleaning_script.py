@@ -11,14 +11,13 @@ actor_csv_file = "E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote s
 import csv
 from datetime import datetime
 
-def read_input_csv():
+def read_input_csv() -> csv.DictReader:
     with open(input_csv_file, 'r') as input_csv_file_object:
         input_csv_file_object_reader = csv.DictReader(input_csv_file_object)
         return input_csv_file_object_reader
         
 
-
-def write_output_csv(file_reader):
+def write_output_csv(file_reader: csv.DictReader) -> None:
     with open(output_csv_file,'w') as sudan_geometry_overwritten:
         fieldnames = file_reader.fieldnames
         fieldnames = ["ResourceID"] + fieldnames
@@ -34,7 +33,7 @@ def write_output_csv(file_reader):
             writer.writerow(row)
 
 
-def data_filter(row):
+def data_filter(row: dict) -> dict:
     if row["Evidence"] == "Building":
         row["Evidence"] = "Structure"
     if row["Evidence"] == "Structures":
@@ -93,7 +92,7 @@ def data_filter(row):
         row["Land use land cover"] = "Built up"
     return row
 
-def convert_date_format(date_str):
+def convert_date_format(date_str: str) -> str:
     try:
         # Parse the input date in the current format
         date_obj = datetime.strptime(date_str, "%d/%m/%Y")
@@ -103,7 +102,7 @@ def convert_date_format(date_str):
         # Handle invalid date format gracefully
         return date_str  # Return the original date if it can't be parsed
 
-def date_format_all_coloums(row):
+def date_format_all_coloums(row: dict) -> dict:
     row["Survey Date"] = convert_date_format(row["Survey Date"])
     row["Date of imagery"] = convert_date_format(row["Date of imagery"])
     row["Date of imagery"] = row["Date of imagery"].replace("20XX", row["Survey Date"])
@@ -112,7 +111,7 @@ def date_format_all_coloums(row):
     row["Image used date"] = convert_date_format(row["Image used date"])
     return row
 
-def actor_uuid_format(row):
+def actor_uuid_format(row: dict) -> dict:
     uuid_user_dict = {}
     with open(actor_csv_file, 'r') as actor_uuid_file:
         actor_uuid_reader = csv.DictReader(actor_uuid_file)
