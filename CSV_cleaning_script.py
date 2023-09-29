@@ -1,19 +1,25 @@
-# This is a sample Python script.
+### This script is used to clean the CSV files for the Arches upload
+### The script is written by Renier Van Der Merwe and Mahmoud Abdelrazek
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+
+# Data sheets
+input_csv_file = "E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote sensing\Sudan_BulkUploadTrial.csv"
+output_csv_file = "E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote sensing\SudanBulkUploadEdElias2023_newGeoRH.csv"
+actor_csv_file = "E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote sensing\Actor.csv"
+
+
 
 
 import csv
 from datetime import datetime
 
 def read_data():
-    with open('E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote sensing\Sudan_BulkUploadTrial.csv', 'r') as sudan_original_trial_file:
+    with open(input_csv_file, 'r') as sudan_original_trial_file:
         sudan_original_trial_reader = csv.DictReader(sudan_original_trial_file)
         writing_csv(sudan_original_trial_reader)
 
 def writing_csv(file_reader):
-    with open('E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote sensing\SudanBulkUploadEdElias2023_newGeoRH.csv','w') as sudan_geometry_overwritten:
+    with open(output_csv_file,'w') as sudan_geometry_overwritten:
         fieldnames = file_reader.fieldnames
         fieldnames = ["ResourceID"] + fieldnames
         writer = csv.DictWriter(sudan_geometry_overwritten, fieldnames=fieldnames)
@@ -108,7 +114,7 @@ def date_format_all_coloums(row):
 
 def actor_uuid_format(row):
     uuid_user_dict = {}
-    with open('E:\MAEASaM\MAEASaM_desktop\Arches\Arches upload files\Remote sensing\Actor.csv', 'r') as actor_uuid_file:
+    with open(actor_csv_file, 'r') as actor_uuid_file:
         actor_uuid_reader = csv.DictReader(actor_uuid_file)
         for uuid_row in actor_uuid_reader:
             uuid_user_dict[uuid_row["Name value"]] = uuid_row["resourceid"]
@@ -121,11 +127,3 @@ def actor_uuid_format(row):
 
 if __name__ == '__main__':
     read_data()
-
-
-
-
-
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
-
