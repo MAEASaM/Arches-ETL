@@ -15,17 +15,26 @@ def read_input_csv() -> csv.DictReader:
     with open(input_csv_file, 'r') as input_csv_file_object:
         input_csv_file_object_reader = csv.DictReader(input_csv_file_object)
         return input_csv_file_object_reader
-        
+
+def check_for_resource_id_column(file_reader: csv.DictReader) -> bool:
+    return "ResourceID" in file_reader.fieldnames     
 
 def write_output_csv(file_reader: csv.DictReader) -> None:
     with open(output_csv_file,'w') as sudan_geometry_overwritten:
+        
         fieldnames = file_reader.fieldnames
-        fieldnames = ["ResourceID"] + fieldnames
+        missing_resource_id = check_for_resource_id_column(file_reader)
+        
+        if not missing_resource_id:
+            fieldnames = ["ResourceID"] + fieldnames
+    
         writer = csv.DictWriter(sudan_geometry_overwritten, fieldnames=fieldnames)
 
         writer.writeheader()
         for row in file_reader:
-            row["ResourceID"] = row["MAEASaM ID"]
+            if not missing_resource_id:
+                row["ResourceID"] = row["MAEASaM ID"]
+
             row = data_filter(row)
             # Convert "Survey Date" column date format from %d/%m/%Y to %Y-%m-%d
             row = date_format_all_coloums(row)
