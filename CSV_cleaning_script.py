@@ -176,7 +176,7 @@ def clean_geomtry_based_on_type(row: dict) -> dict:
     else:
         return row
 
-def remove_duplicate_points(geometry_wkt):
+def remove_duplicate_points(geometry_wkt: str) -> str:
     if not geometry_wkt:
         return ''
     
