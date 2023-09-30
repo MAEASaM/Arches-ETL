@@ -157,8 +157,10 @@ def date_format_all_coloums(row: dict) -> dict:
 
 
 def actor_uuid_format(row: dict, actor_uuid_dict) -> dict:
-    row["Surveyor Name"] = "[{'resourceId': '"+ actor_uuid_dict[row["Surveyor Name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
-    row["Threat assessor name"] = "[{'resourceId': '"+ actor_uuid_dict[row["Threat assessor name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
+    if row["Surveyor Name"]:
+        row["Surveyor Name"] = "[{'resourceId': '"+ actor_uuid_dict[row["Surveyor Name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
+    if row["Threat assessor name"]:
+        row["Threat assessor name"] = "[{'resourceId': '"+ actor_uuid_dict[row["Threat assessor name"]] + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
     return row
 
 def clean_geomtry_based_on_type(row: dict) -> dict:
@@ -168,7 +170,6 @@ def clean_geomtry_based_on_type(row: dict) -> dict:
         if geometry_type == "POINT":
             return row
         elif geometry_type == "MULTIPOLYGON":
-            print(row["ResourceID"] + " is a multipolygon")
             row["Geometry"] = remove_duplicate_points(geometry)
             return row
         else:
