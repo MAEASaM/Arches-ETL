@@ -1,5 +1,5 @@
 ### This script is used to clean the CSV files for the Arches upload
-### The script is written by Renier Van Der Merwe and Mahmoud Abdelrazek
+### The script is written by Mahmoud Abdelrazek and Renier van der Merwe
 
 ### TODO:
 # 1. Refactor actor_uuid_format function to generate the actor dict only once # Done
@@ -10,8 +10,8 @@
 
 
 # Data sheets
-input_csv_file = "Sudan_BulkUploadTrial (1).csv"
-output_csv_file = "sudan_modified.csv"
+input_csv_file = "all_zim_data.csv"
+output_csv_file = "zim_modified.csv"
 actor_csv_file = "Actor.csv"
 
 
@@ -22,14 +22,13 @@ from shapely import wkt
 from shapely.geometry import MultiPolygon, Polygon, Point
 
 
-
 # find the path of the script
 script_path = pathlib.Path(__file__).parent.absolute()
 
 # add script path to the csv files
-input_csv_file = str(script_path) + "/" + input_csv_file
-output_csv_file = str(script_path) + "/" + output_csv_file
-actor_csv_file = str(script_path) + "/" + actor_csv_file
+input_csv_file = script_path  /  input_csv_file
+output_csv_file = script_path / output_csv_file
+actor_csv_file = script_path / actor_csv_file
 
 
 def read_input_csv() -> csv.DictReader:
@@ -102,6 +101,10 @@ def data_filter(row: dict) -> dict:
         row["Evidence"] = "Stone circle"
     if row["Evidence"] == "Complex Structure":
         row["Evidence"] = "Complex structure"
+    if row["Evidence"] == "Earth":
+        row["Evidence"] = "Terrace"
+    if row["Evidence"] == "Soil discoloration":
+        row["Evidence"] = "Discolouration"
     if row["Image Type"] == "CNES / Airbus":
         row["Image Type"] = "CNES Airbus"
     if row["Image Type"] == "Bung":
@@ -110,16 +113,28 @@ def data_filter(row: dict) -> dict:
         row["Climate Zone"] = "Temperate Dry Winter Hot summer"
     if row["Climate Zone"] == "Dry Winter-Warm Summer (t)":
         row["Climate Zone"] = "Temperate Dry Winter Warm summer"
+    if row["Climate Zone"] == "Cwb":
+        row["Climate Zone"] = "Temperate Dry Winter Warm summer"
+    if row["Climate Zone"] == "Cwa":
+        row["Climate Zone"] = "Temperate Dry Winter Hot summer"
+    if row["Climate Zone"] == "Bsh":
+        row["Climate Zone"] = "Steppe Hot"
     if row["Surveyor Name"] == "Ed Burnett":
         row["Surveyor Name"] = "Ed Burnett, Edward Burnett"
+    if row["Threat assessor name"] == "Renier van der Merwe":
+        row["Threat assessor name"] = "Renier Hendrik van der Merwe"
     if row["Threat assessor name"] == "Ed Burnett":
         row["Threat assessor name"] = "Ed Burnett, Edward Burnett"
+    if row["Threat assessor name"] == "Renier van der Merwe":
+        row["Threat assessor name"] = "Renier Hendrik van der Merwe"
     if row["Measurement unit"] == "m2":
         row["Measurement unit"] = "square meter"
     if row["Measurement unit"] == "m":
         row["Measurement unit"] = "Meter"
     if row["Measurement unit"] == "Hectares":
         row["Measurement unit"] = "Hectare"
+    if row["Measurement unit"] == "Perimiter":
+        row["Measurement unit"] = "Area"
     if row["Additional information"] == "M":
         row["Additional information"] = ""
     if row["Survey type"] == "Historic maps check":
@@ -134,6 +149,8 @@ def data_filter(row: dict) -> dict:
         row["Ground truthed"] = "No"
     if row["Land use land cover"] == "Built-up":
         row["Land use land cover"] = "Built up"
+    if row["Land use land cover"] == "grassland":
+        row["Land use land cover"] = "Grassland"
     return row
 
 def convert_date_format(date_str: str) -> str:
