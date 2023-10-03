@@ -160,8 +160,18 @@ def data_filter(row: dict) -> dict:
         row["Threat type"] = "Urbanisation"
     if row["Threat type"] == "Environmental":
         row["Threat type"] = "Episodic events"
+    if row["Threat type"] == "Environmental ":
+        row["Threat type"] = "Episodic events"
     if row["Threat type"] == "Anthopogenic":
         row["Threat type"] = "Agriculture"
+    if row["Threat type"] == "Anthropogenic":
+        row["Threat type"] = "Agriculture"
+    if row["Threat type"] == "Antrhopgenic":
+        row["Threat type"] = "Agriculture"
+    if row["Threat type"] == "Antrhopogenic":
+        row["Threat type"] = "Agriculture"
+    if row["Threat type"] == "Development":
+        row["Threat type"] = "Urbanisation"   
     if row["Evidence shape"] == "Ring":
         row["Evidence shape"] = "Circular"
     if row["Ground truthed"] == "#REF!":
@@ -176,6 +186,10 @@ def data_filter(row: dict) -> dict:
         row["Land use land cover"] = "Thicket"
     if row["Land use land cover"] == "Shurbland":
         row["Land use land cover"] = "Scrub"
+    if row["Land use land cover"] == "Bare rock or Soil discoloration":
+        row["Land use land cover"] = "Bare rock or soil"
+    if row["Land use land cover"] == "Bare":
+        row["Land use land cover"] = "Bare rock or soil"
     return row
 
 def convert_date_format(date_str: str) -> str:
