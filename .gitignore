@@ -131,8 +131,9 @@ dmypy.json
 # data
 /data
 
-# csv files
+# csv and xml files
 *.csv
+*.xml
 
 # ds_store
 .DS_Store
