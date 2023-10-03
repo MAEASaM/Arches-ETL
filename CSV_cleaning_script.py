@@ -170,6 +170,8 @@ def data_filter(row: dict) -> dict:
         row["Threat type"] = "Agriculture"
     if row["Threat type"] == "Antrhopogenic":
         row["Threat type"] = "Agriculture"
+    if row["Threat type"] == "Antrhopegnic":
+        row["Threat type"] = "Agriculture"
     if row["Threat type"] == "Development":
         row["Threat type"] = "Urbanisation"   
     if row["Evidence shape"] == "Ring":
@@ -180,14 +182,26 @@ def data_filter(row: dict) -> dict:
         row["Land use land cover"] = "Built up"
     if row["Land use land cover"] == "grassland":
         row["Land use land cover"] = "Grassland"
+    if row["Land use land cover"] == "Grasland":
+        row["Land use land cover"] = "Grassland"
     if row["Land use land cover"] == "Cropland":
         row["Land use land cover"] = "Cultivated"
     if row["Land use land cover"] == "Tree Cover":
         row["Land use land cover"] = "Thicket"
+    if row["Land use land cover"] == "thicket":
+        row["Land use land cover"] = "Thicket"    
     if row["Land use land cover"] == "Shurbland":
+        row["Land use land cover"] = "Scrub"
+    if row["Land use land cover"] == "Shrubland":
+        row["Land use land cover"] = "Scrub"
+    if row["Land use land cover"] == "scrub":
         row["Land use land cover"] = "Scrub"
     if row["Land use land cover"] == "Bare rock or Soil discoloration":
         row["Land use land cover"] = "Bare rock or soil"
+    if row["Land use land cover"] == "Bare roack or Soil discoloration":
+        row["Land use land cover"] = "Bare rock or soil"
+    if row["Land use land cover"] == "Built-up (rural)":
+        row["Land use land cover"] = "Built up rural"
     if row["Land use land cover"] == "Bare":
         row["Land use land cover"] = "Bare rock or soil"
     return row
