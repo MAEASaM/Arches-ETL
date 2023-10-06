@@ -19,7 +19,7 @@ with open('E:\MAEASaM\MAEASaM_desktop\Arches\Arches Git\Arches-ETL\Admin model\A
 
 # Create a dictionary to map country names to country codes
 country_codes = {
-    'Botswana': 'BWA',
+    'Botswana ': 'BWA',
     'Ethiopia': 'ETH',
     'Kenya': 'KEN',
     'Mali': 'MLI',

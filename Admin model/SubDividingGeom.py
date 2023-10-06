@@ -1,57 +1,57 @@
-import os
-from qgis.core import QgsVectorLayer, QgsFeature, QgsGeometry, QgsField, QgsVectorFileWriter, QgsProject
+import pandas as pd
+import re
+import sys
+import csv
+from shapely.geometry import MultiPolygon
+from collections import defaultdict
 
-# Input and output file paths
-input_file = "path/to/your/input/polygon.shp"
-output_file = "path/to/your/output/polygon_combined.shp"
+# Increase the maxInt value to avoid OverflowError
+maxInt = sys.maxsize
+while True:
+    try:
+        csv.field_size_limit(maxInt)
+        break
+    except OverflowError:
+        maxInt = int(maxInt / 10)
 
-# Define the maximum number of coordinates in each segment
-max_coordinates_per_segment = 1400
+# Read the CSV file into a DataFrame
+df = pd.read_csv(r'E:\MAEASaM\MAEASaM_desktop\Arches\Arches Git\Arches-ETL\Admin model\DividTest.csv')
 
-# Load the input vector layer
-layer = QgsVectorLayer(input_file, "input_layer", "ogr")
+# Define a function to parse the coordinates from the "Geometry" column
+def parse_coordinates(geometry_str):
+    # Use regular expression to extract coordinates
+    coordinates = re.findall(r'(\d+\.\d+) (-\d+\.\d+)', geometry_str)
+    return [(float(lon), float(lat)) for lon, lat in coordinates]
 
-# Check if the layer was loaded successfully
-if not layer.isValid():
-    print("Error: Could not load the input layer.")
-else:
-    # Create a new memory layer for the combined features
-    combined_layer = QgsVectorLayer("Polygon?crs=" + layer.crs().authid(), "combined_layer", "memory")
-    provider = combined_layer.dataProvider()
-    fields = layer.fields()
+# Define a function to find the two outermost coordinates on a straight line
+def find_outermost_coordinates(coordinates):
+    if not coordinates:
+        # Handle the case where coordinates is empty
+        return None, None
 
-    # Iterate through features in the input layer
-    for feature in layer.getFeatures():
-        geom = feature.geometry()
+    min_x = min(coordinates, key=lambda x: x[0])
+    max_x = max(coordinates, key=lambda x: x[0])
+    min_y = min(coordinates, key=lambda x: x[1])
+    max_y = max(coordinates, key=lambda x: x[1])
 
-        # Handle MultiPolygon geometries
-        if geom.isMultipart():
-            for part in geom.asMultiPolygon():
-                coordinates = part[0]
-                segments = [coordinates[i:i + max_coordinates_per_segment] for i in range(0, len(coordinates), max_coordinates_per_segment)]
+    return (min_x, min_y), (max_x, max_y)
 
-                # Create a new feature for each segment
-                for segment_coords in segments:
-                    new_geom = QgsGeometry.fromPolygonXY([segment_coords])
-                    new_feature = QgsFeature(fields)
-                    new_feature.setGeometry(new_geom)
-                    new_feature.setAttributes(feature.attributes())
-                    provider.addFeature(new_feature)
-        else:
-            coordinates = geom.asPolygon()[0]  # Extract the coordinates as a list
-            segments = [coordinates[i:i + max_coordinates_per_segment] for i in range(0, len(coordinates), max_coordinates_per_segment)]
+# Iterate through the DataFrame
+for index, row in df.iterrows():
+    # Parse the coordinates
+    coordinates = parse_coordinates(row['Geometry'])
 
-            # Create a new feature for each segment
-            for segment_coords in segments:
-                new_geom = QgsGeometry.fromPolygonXY([segment_coords])
-                new_feature = QgsFeature(fields)
-                new_feature.setGeometry(new_geom)
-                new_feature.setAttributes(feature.attributes())
-                provider.addFeature(new_feature)
+    # Find the outermost coordinates on the straight line
+    min_coord, max_coord = find_outermost_coordinates(coordinates)
 
-    # Save the combined layer to a new shapefile
-    QgsVectorFileWriter.writeAsVectorFormat(combined_layer, output_file, "utf-8", combined_layer.crs(), "ESRI Shapefile")
+    # Remove coordinates between min_coord and max_coord
+    coordinates = [coord for coord in coordinates if coord == min_coord or coord == max_coord or not (min_coord[0] <= coord[0] <= max_coord[0])]
 
-    # Unload the layers
-    QgsProject.instance().removeMapLayer(layer.id())
-    QgsProject.instance().removeMapLayer(combined_layer.id())
+    # Convert the coordinates back to the geometry string format
+    new_geometry = ' '.join([f'{lon} {lat}' for lon, lat in coordinates])
+
+    # Update the DataFrame with the new geometry
+    df.at[index, 'Geometry'] = f'MultiPolygon ((({new_geometry})))'
+
+# Save the updated DataFrame to a new CSV file
+df.to_csv(r'updated_csv_file.csv', index=False)

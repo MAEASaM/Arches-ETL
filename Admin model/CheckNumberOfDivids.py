@@ -15,7 +15,7 @@ while True:
         maxInt = int(maxInt/10)
 
 # Specify the CSV file name
-csv_file = 'E:\MAEASaM\MAEASaM_desktop\Arches\Arches Git\Arches-ETL\Admin model\AdminModelData.csv'
+csv_file = 'E:\MAEASaM\MAEASaM_desktop\Arches\Arches Git\Arches-ETL\Admin model\DividTest.csv'
 
 # Create a dictionary to store the counts of coordinates for each geometry
 geometry_counts = defaultdict(int)
@@ -37,7 +37,7 @@ with open(csv_file, 'r') as file:
             for polygon in geometry:
                 num_coordinates = len(polygon.exterior.coords)
                 # Update the count for the geometry
-                geometry_counts[row['MAEASaM ID']] += num_coordinates
+                geometry_counts[row['id']] += num_coordinates
         else:
             num_coordinates = len(geometry.exterior.coords)
             # Update the count for the geometry
