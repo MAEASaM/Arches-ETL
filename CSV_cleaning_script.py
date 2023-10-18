@@ -55,34 +55,35 @@ def check_for_resource_id_column(file_reader: csv.DictReader) -> bool:
     return "ResourceID" in file_reader.fieldnames     
 
 def write_output_csv(file_reader: csv.DictReader) -> None:
-    with open(output_csv_file,'w') as zim_data_overwritten:
-        
-        # read actor uuid csv
+    with open(output_csv_file, 'w') as zim_data_overwritten:
+        # Read actor uuid csv
         actor_uuid_dict = read_actor_uuid_csv()
 
         fieldnames = file_reader.fieldnames
         missing_resource_id = check_for_resource_id_column(file_reader)
-        
+
         if not missing_resource_id:
             fieldnames = ["ResourceID"] + fieldnames
-                
-        writer = csv.DictWriter(zim_data_overwritten, fieldnames=fieldnames)
 
+        writer = csv.DictWriter(zim_data_overwritten, fieldnames=fieldnames)
         writer.writeheader()
-        for row in file_reader:
+
+        for index, row in enumerate(file_reader, start=1):
             if not missing_resource_id:
                 row["ResourceID"] = row["MAEASaM ID"]
-                
+
             row = data_filter(row)
             row = date_format_all_coloums(row)
             row = actor_uuid_format(row, actor_uuid_dict)
             row = clean_geomtry_based_on_type(row)
-            if not all(value == "" for value in row.values()):#I added this section but it does not prevent the writting of empty rows
-                writer.writerow(row)
-            
-            
-            
 
+            if not all(value == "" for value in row.values()):
+                writer.writerow(row)
+            else:
+                print(f"Skipping empty row at index {index}")
+            
+            
+            
 
 def data_filter(row: dict) -> dict:
     if row["Evidence"] == "Building":
@@ -226,15 +227,16 @@ def clean_geomtry_based_on_type(row: dict) -> dict:
         geometry_type = geometry.split(" ")[0]
         if geometry_type == "POINT":
             return row
-        if geometry_type == "POLYGON": #Add this to avoid the error but not sure if solved it
+        if geometry_type == "POLYGON":
             return row
-        if geometry_type == "LINESTRING": #Add this to avoid the error but not sure if solved it
+        if geometry_type == "LINESTRING":
             return row
         elif geometry_type == "MULTIPOLYGON":
-            row["Geometry"] = remove_duplicate_points(geometry)
-            return row
+            cleaned_row = row.copy()  # Make a copy to avoid modifying the original row
+            cleaned_row["Geometry"] = remove_duplicate_points(geometry)
+            return cleaned_row
         else:
-            print("Unknown geometry type: " + geometry_type)
+            print(f"Unknown geometry type: {geometry_type}")
     else:
         return row
 
