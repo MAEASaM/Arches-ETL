@@ -132,7 +132,7 @@ dmypy.json
 /data
 
 # csv and xml files
-#*.csv
+*.csv
 *.xml
 
 # ds_store
