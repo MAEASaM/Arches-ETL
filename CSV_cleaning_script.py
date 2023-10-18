@@ -70,19 +70,14 @@ def write_output_csv(file_reader: csv.DictReader) -> None:
         writer.writeheader()
         for row in file_reader:
             if not missing_resource_id:
-                row["ResourceID"] = row["MAEASaM ID"]
-                
+                row["ResourceID"] = row["MAEASaM ID"] 
             row = data_filter(row)
             row = date_format_all_coloums(row)
             row = actor_uuid_format(row, actor_uuid_dict)
             row = clean_geomtry_based_on_type(row)
-            if any(field.strip() for field in row):
+            if any(field.strip() for field in row if field.strip()):
                 writer.writerow(row)
-            
-            
-            
-
-
+                
 def data_filter(row: dict) -> dict:
     if row["Evidence"] == "Building":
         row["Evidence"] = "Structure"
