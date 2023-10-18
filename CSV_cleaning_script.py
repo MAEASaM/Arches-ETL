@@ -12,8 +12,8 @@
 
 
 # Data sheets
-input_csv_file = "all_zim_data_organised.csv"
-output_csv_file = "zim_modified.csv"
+input_csv_file = "SudanBulkUploadEdElias2023_missingdata_organisied.csv"
+output_csv_file = "sudan_modified.csv"
 actor_csv_file = "Actor.csv"
 
 
@@ -71,13 +71,13 @@ def write_output_csv(file_reader: csv.DictReader) -> None:
         for row in file_reader:
             if not missing_resource_id:
                 row["ResourceID"] = row["MAEASaM ID"]
-                row["Geometry type"] = row["WKT"] #This is just a fix for my csv. We will have to change it to do this only if a WKT coloum is pressent
-
+                
             row = data_filter(row)
             row = date_format_all_coloums(row)
             row = actor_uuid_format(row, actor_uuid_dict)
             row = clean_geomtry_based_on_type(row)
-            writer.writerow(row)
+            if any(field.strip() for field in row):
+                writer.writerow(row)
             
             
             
@@ -220,7 +220,7 @@ def actor_uuid_format(row: dict, actor_uuid_dict) -> dict:
     return row
 
 def clean_geomtry_based_on_type(row: dict) -> dict:
-    geometry = row["Geometry type"]
+    geometry = row["Geometry"]
     if geometry:
         geometry_type = geometry.split(" ")[0]
         if geometry_type == "POINT":
@@ -230,7 +230,7 @@ def clean_geomtry_based_on_type(row: dict) -> dict:
         if geometry_type == "LINESTRING": #Add this to avoid the error but not sure if solved it
             return row
         elif geometry_type == "MULTIPOLYGON":
-            row["Geometry type"] = remove_duplicate_points(geometry)
+            row["Geometry"] = remove_duplicate_points(geometry)
             return row
         else:
             print("Unknown geometry type: " + geometry_type)
