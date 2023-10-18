@@ -31,13 +31,13 @@ def extract_features(geojson_file):
                     polygons = [geom]
                 else:
                     # Unsupported geometry type, store it as a separate row
-                    row = {**properties, 'Geometry': None}
+                    row = {**properties, 'Geometry': None, 'ResourceID': maeasam_id}
                     rows.append(row)
                     continue
 
-                # Create a row for each polygon with the same MAEASaM ID
+                # Create a row for each polygon with the same MAEASaM ID and ResourceID
                 for polygon in polygons:
-                    row = {**properties, 'Geometry': polygon}
+                    row = {**properties, 'Geometry': polygon, 'ResourceID': maeasam_id}
                     rows.append(row)
 
             except ValueError:
@@ -56,7 +56,7 @@ def extract_features(geojson_file):
     return df
 
 # Usage: Specify your GeoJSON file path here
-geojson_file = 'E:\MAEASaM\MAEASaM_desktop\Arches\Admin Resource Model\Finale files\Admin_model_levels_upload.geojson'
+geojson_file = 'E:\MAEASaM\MAEASaM_desktop\Arches\Arches Git\Arches-ETL\Admin model\Admin_model_levels_upload.geojson'
 csv_data = extract_features(geojson_file)
 
 # Save the resulting DataFrame to a CSV file

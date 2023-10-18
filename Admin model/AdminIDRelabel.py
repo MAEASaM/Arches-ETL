@@ -13,7 +13,7 @@ while True:
         maxInt = int(maxInt/10)
         
 # Read the CSV file
-with open('E:\MAEASaM\MAEASaM_desktop\Arches\Arches Git\Arches-ETL\Admin model\AdminModelData.csv', 'r') as csvfile:
+with open('AdminModelData.csv', 'r') as csvfile:
     reader = csv.DictReader(csvfile)
     rows = list(reader)
 
@@ -61,7 +61,7 @@ for row in sorted_rows:
     row['ResourceID'] = unique_id.replace('RESOURCE-', '')
 
 # Write the updated data back to a new CSV file
-with open('E:\MAEASaM\MAEASaM_desktop\Arches\Arches Git\Arches-ETL\Admin model\AdminModel.csv', 'w', newline='') as csvfile:
+with open('NewAdminModelLabel.csv', 'w', newline='') as csvfile:
     fieldnames = reader.fieldnames + ['ResourceID']  # Add 'ResourceID' to the fieldnames
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()

@@ -8,12 +8,13 @@
 # 4. generalise the script to work with other csv files
 # 5. Allow for multiple date formates to be corrected to the require formate
 # 6. Add section that orgnises the MAEASaM ID numericaly from the input csv
+# 7. Add section to skip the writting of empty rows.
 
 
 
 # Data sheets
-input_csv_file = "all_zim_data_organised.csv"
-output_csv_file = "zim_modified.csv"
+input_csv_file = "SudanBulkUploadEdElias2023_missingdata_organisied.csv"
+output_csv_file = "Sudan_modified.csv"
 actor_csv_file = "Actor.csv"
 
 
@@ -71,13 +72,13 @@ def write_output_csv(file_reader: csv.DictReader) -> None:
         for row in file_reader:
             if not missing_resource_id:
                 row["ResourceID"] = row["MAEASaM ID"]
-                row["Geometry type"] = row["WKT"] #This is just a fix for my csv. We will have to change it to do this only if a WKT coloum is pressent
-
+                
             row = data_filter(row)
             row = date_format_all_coloums(row)
             row = actor_uuid_format(row, actor_uuid_dict)
             row = clean_geomtry_based_on_type(row)
-            writer.writerow(row)
+            if not all(value == "" for value in row.values()):#I added this section but it does not prevent the writting of empty rows
+                writer.writerow(row)
             
             
             
@@ -170,8 +171,6 @@ def data_filter(row: dict) -> dict:
         row["Threat type"] = "Agriculture"
     if row["Threat type"] == "Antrhopogenic":
         row["Threat type"] = "Agriculture"
-    if row["Threat type"] == "Antrhopegnic":
-        row["Threat type"] = "Agriculture"
     if row["Threat type"] == "Development":
         row["Threat type"] = "Urbanisation"   
     if row["Evidence shape"] == "Ring":
@@ -182,26 +181,14 @@ def data_filter(row: dict) -> dict:
         row["Land use land cover"] = "Built up"
     if row["Land use land cover"] == "grassland":
         row["Land use land cover"] = "Grassland"
-    if row["Land use land cover"] == "Grasland":
-        row["Land use land cover"] = "Grassland"
     if row["Land use land cover"] == "Cropland":
         row["Land use land cover"] = "Cultivated"
     if row["Land use land cover"] == "Tree Cover":
         row["Land use land cover"] = "Thicket"
-    if row["Land use land cover"] == "thicket":
-        row["Land use land cover"] = "Thicket"    
     if row["Land use land cover"] == "Shurbland":
-        row["Land use land cover"] = "Scrub"
-    if row["Land use land cover"] == "Shrubland":
-        row["Land use land cover"] = "Scrub"
-    if row["Land use land cover"] == "scrub":
         row["Land use land cover"] = "Scrub"
     if row["Land use land cover"] == "Bare rock or Soil discoloration":
         row["Land use land cover"] = "Bare rock or soil"
-    if row["Land use land cover"] == "Bare roack or Soil discoloration":
-        row["Land use land cover"] = "Bare rock or soil"
-    if row["Land use land cover"] == "Built-up (rural)":
-        row["Land use land cover"] = "Built up rural"
     if row["Land use land cover"] == "Bare":
         row["Land use land cover"] = "Bare rock or soil"
     return row
@@ -234,7 +221,7 @@ def actor_uuid_format(row: dict, actor_uuid_dict) -> dict:
     return row
 
 def clean_geomtry_based_on_type(row: dict) -> dict:
-    geometry = row["Geometry type"]
+    geometry = row["Geometry"]
     if geometry:
         geometry_type = geometry.split(" ")[0]
         if geometry_type == "POINT":
@@ -244,7 +231,7 @@ def clean_geomtry_based_on_type(row: dict) -> dict:
         if geometry_type == "LINESTRING": #Add this to avoid the error but not sure if solved it
             return row
         elif geometry_type == "MULTIPOLYGON":
-            row["Geometry type"] = remove_duplicate_points(geometry)
+            row["Geometry"] = remove_duplicate_points(geometry)
             return row
         else:
             print("Unknown geometry type: " + geometry_type)
