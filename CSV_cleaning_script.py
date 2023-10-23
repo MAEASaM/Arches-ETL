@@ -11,11 +11,13 @@
 
 
 # Data sheets
+
 input_csv_file = "all_zim_data_organised.csv"
 output_csv_file = "zim_modified.csv"
 actor_csv_file = "Actor.csv"
 
 
+import pandas as pd
 import csv
 from datetime import datetime
 import pathlib
@@ -30,6 +32,17 @@ script_path = pathlib.Path(__file__).parent.absolute()
 input_csv_file = script_path / input_csv_file
 output_csv_file = script_path / output_csv_file
 actor_csv_file = script_path / actor_csv_file
+
+
+class CSV_cleaning_script:
+    def __init__(self):
+        pass
+
+    def read_input_csv(self) -> pd.DataFrame:
+        with open(input_csv_file, 'r') as input_csv_file_object:
+            input_csv_file_object_reader = csv.DictReader(input_csv_file_object)
+            write_output_csv(input_csv_file_object_reader)
+            # return input_csv_file_object_reader
 
 
 def read_input_csv() -> csv.DictReader:
