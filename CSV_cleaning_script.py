@@ -12,7 +12,7 @@
 
 # Data sheets
 
-input_csv_file = "all_zim_data_organised.csv"
+input_csv_file = "Sudan_BulkUploadTrial (1).csv"
 output_csv_file = "zim_modified.csv"
 actor_csv_file = "Actor.csv"
 
@@ -34,36 +34,197 @@ output_csv_file = script_path / output_csv_file
 actor_csv_file = script_path / actor_csv_file
 
 
-class CSV_cleaning_script:
-    def __init__(self):
-        pass
+class csv_cleaner:
+    def __init__(self, main_input_file):
+        self.main_input_df = pd.read_csv(main_input_file)
+        self.working_drictory = pathlib.Path(main_input_file).parent.absolute()
+        self.output_csv_name_and_directory = self.working_drictory / (
+            pathlib.Path(main_input_file).stem + "_cleaned.csv"
+        )
 
-    def read_input_csv(self) -> pd.DataFrame:
-        with open(input_csv_file, 'r') as input_csv_file_object:
-            input_csv_file_object_reader = csv.DictReader(input_csv_file_object)
-            write_output_csv(input_csv_file_object_reader)
-            # return input_csv_file_object_reader
+    def read_name_uuid_supportive_file(self, file_name: str or pathlib.Path) -> dict:
+        name_uuid_supportive_file = pd.read_csv(file_name)
+        name_uuid_supportive_dict = pd.Series(
+            name_uuid_supportive_file["Name value"].values,
+            index=name_uuid_supportive_file["resourceid"],
+        ).to_dict()
+        return name_uuid_supportive_dict
+
+    def read_replacment_supportive_file(self, file_name: str or pathlib.Path) -> dict:
+        name_uuid_supportive_file = pd.read_csv(file_name)
+        return name_uuid_supportive_file
+
+    def check_for_resource_id_column(self) -> bool:
+        return "ResourceID" in self.main_input_df.keys()
+
+    def add_resource_id_column(self) -> None:
+        if not self.check_for_resource_id_column():
+            self.main_input_df["ResourceID"] = self.main_input_df["MAEASaM ID"]
+
+    def add_resource_instace_json(
+        self,
+        value_uuid_dict: dict,
+        col_name: str,
+        forward_property: str = "http://www.cidoc-crm.org/cidoc-crm/P11_had_participant",
+        inverse_property: str = "http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to",
+    ) -> None:
+        self.main_input_df[col_name] = self.main_input_df[col_name].apply(
+            lambda x: (
+                "[{'resourceId': '"
+                + value_uuid_dict[x]
+                + "','ontologyProperty': '"
+                + forward_property
+                + "', 'resourceXresourceId': '','inverseOntologyProperty': '"
+                + inverse_property
+                + "'}]"
+            )
+            if x in value_uuid_dict.keys()
+            else ""
+        )
+
+    def covert_date_format(self, date_str: str) -> str:
+        try:
+            date_obj = datetime.strptime(date_str, "%Y/%m/%d")
+            return date_obj.strftime("%Y-%m-%d")
+        except ValueError:
+            return date_str
+
+    def date_format_list_of_coloums(self, row: dict, date_cloumn_names: list) -> None:
+        for date_cloumn_name in date_cloumn_names:
+            self.main_input_df[date_cloumn_name] = self.main_input_df[
+                date_cloumn_name
+            ].apply(self.covert_date_format)
+
+    def replace_value_in_coloum(
+        self, coloum_name: str, old_value: str, new_value: str
+    ) -> None:
+        self.main_input_df[coloum_name] = self.main_input_df[coloum_name].replace(
+            old_value, new_value
+        )
+
+    def stream_replace_value_in_coloum(self, replacement_df: pd.DataFrame) -> None:
+        for index, row in replacement_df.iterrows():
+            self.replace_value_in_coloum(
+                row["coloum_name"], row["old_value"], row["new_value"]
+            )
+
+    def copy_value_from_coloum_to_coloum_on_optioanl_condation(
+        self, source_coloum_name: str, target_coloum_name: str, condation_value: str
+    ) -> None:
+        self.main_input_df[target_coloum_name] = self.main_input_df.apply(
+            lambda x: x[target_coloum_name]
+            if x[condation_value]
+            else x[source_coloum_name],
+            axis=1,
+        )
+
+    def stream_copy_value_from_coloum_to_coloum(
+        self, replacement_df: pd.DataFrame
+    ) -> None:
+        for index, row in replacement_df.iterrows():
+            self.copy_value_from_coloum_to_coloum_on_optioanl_condation(
+                row["source_coloum_name"],
+                row["target_coloum_name"],
+                row["condation_value"],
+            )
+
+    def remove_duplicate_points(self, geometry_wkt: str) -> str:
+        if not geometry_wkt:
+            return ""
+
+        if type(geometry_wkt) == str:
+            geometry = wkt.loads(geometry_wkt)
+        else:
+            geometry = geometry_wkt
+
+        seen_points = set()
+
+        if isinstance(geometry, MultiPolygon):
+            new_polygons = []
+            for polygon in geometry.geoms:
+                new_polygon = remove_duplicate_points(polygon)
+                new_polygons.append(new_polygon)
+            return MultiPolygon(new_polygons)
+        elif isinstance(geometry, Polygon):
+            new_exterior = []
+            for point in geometry.exterior.coords:
+                if point not in seen_points:
+                    seen_points.add(point)
+                    new_exterior.append(point)
+            new_interiors = []
+            for interior in geometry.interiors:
+                new_interior = []
+                for point in interior.coords:
+                    if point not in seen_points:
+                        seen_points.add(point)
+                        new_interior.append(point)
+                new_interiors.append(new_interior)
+
+            return Polygon(shell=new_exterior, holes=new_interiors)
+        else:
+            return geometry
+
+    def clean_geomtry_based_on_type(
+        self, geometry_column_name: str = "geometry"
+    ) -> dict:
+        # currently cleans only the multipolygon geometry. Needs more to be gneneralized for other types
+        self.main_input_df[geometry_column_name] = self.main_input_df[
+            geometry_column_name
+        ].apply(
+            lambda x: (
+                self.remove_duplicate_points(x)
+                if x.split(" ")[0] == "MULTIPOLYGON"
+                else x
+            )
+        )
+
+    def write_output_csv(self) -> None:
+        self.main_input_df.to_csv(self.output_csv_name_and_directory, index=False)
+
+    def clean_file(
+        self,
+        name_uuid_supportive_file=None,
+        resource_instace_column_list=[],
+        replacment_supportive_file=None,
+        date_format_coloums=[],
+    ) -> None:
+        if name_uuid_supportive_file and len(resource_instace_column_list) > 0:
+            name_uuid_supportive_dict = self.read_name_uuid_supportive_file(
+                name_uuid_supportive_file
+            )
+            for resource_instace_column in resource_instace_column_list:
+                self.add_resource_instace_json(
+                    name_uuid_supportive_dict, resource_instace_column
+                )
+        if replacment_supportive_file:
+            replacment_supportive_df = self.read_replacment_supportive_file(
+                replacment_supportive_file
+            )
+            if all(
+                x in replacment_supportive_file.keys
+                for x in ["condation_value", "target_coloum_name", "source_coloum_name"]
+            ):
+                self.stream_copy_value_from_coloum(replacment_supportive_df)
+            elif all(
+                x in replacment_supportive_file.keys
+                for x in ["old_value", "new_value", "coloum_name"]
+            ):
+                self.stream_replace_value_in_coloum(replacment_supportive_df)
+            else:
+                pass
+        if len(date_format_coloums) > 0:
+            self.date_format_list_of_coloums(date_format_coloums)
+        self.clean_geomtry_based_on_type()
+        self.write_output_csv()
 
 
-def read_input_csv() -> csv.DictReader:
-    with open(input_csv_file, "r") as input_csv_file_object:
-        input_csv_file_object_reader = csv.DictReader(input_csv_file_object)
-        write_output_csv(input_csv_file_object_reader)
-        # return input_csv_file_object_reader
+def date_format_all_coloums(row: dict) -> dict:
+    row["Date of imagery"] = row["Date of imagery"].replace("20XX", row["Survey date"])
+    row["Date of imagery"] = row["Date of imagery"].replace(
+        "1900-01-00", row["Survey date"]
+    )
 
-
-def read_actor_uuid_csv() -> dict:
-    actor_uuid_dict = {}
-    with open(actor_csv_file, "r") as actor_uuid_file_object:
-        actor_uuid_file_object_reader = csv.DictReader(actor_uuid_file_object)
-        for uuid_row in actor_uuid_file_object_reader:
-            actor_uuid_dict[uuid_row["Name value"]] = uuid_row["resourceid"]
-
-    return actor_uuid_dict
-
-
-def check_for_resource_id_column(file_reader: csv.DictReader) -> bool:
-    return "ResourceID" in file_reader.fieldnames
+    return row
 
 
 def write_output_csv(file_reader: csv.DictReader) -> None:
@@ -82,7 +243,6 @@ def write_output_csv(file_reader: csv.DictReader) -> None:
         writer.writeheader()
         for row in file_reader:
             if not missing_resource_id:
-                row["ResourceID"] = row["MAEASaM ID"]
                 row["Geometry type"] = row[
                     "WKT"
                 ]  # This is just a fix for my csv. We will have to change it to do this only if a WKT coloum is pressent
@@ -204,104 +364,8 @@ def data_filter(row: dict) -> dict:
     return row
 
 
-def convert_date_format(date_str: str) -> str:
-    try:
-        # Parse the input date in the current format
-        date_obj = datetime.strptime(date_str, "%Y/%m/%d")
-        # Convert it to the desired format "%Y-%m-%d"
-        return date_obj.strftime("%Y-%m-%d")
-    except ValueError:
-        # Handle invalid date format gracefully
-        return date_str  # Return the original date if it can't be parsed
-
-
-def date_format_all_coloums(row: dict) -> dict:
-    row["Survey date"] = convert_date_format(row["Survey date"])
-    row["Date of imagery"] = convert_date_format(row["Date of imagery"])
-    row["Date of imagery"] = row["Date of imagery"].replace("20XX", row["Survey date"])
-    row["Date of imagery"] = row["Date of imagery"].replace(
-        "1900-01-00", row["Survey date"]
-    )
-    row["Threat assessment date"] = convert_date_format(row["Threat assessment date"])
-    row["Image used date"] = convert_date_format(row["Image used date"])
-    return row
-
-
-def actor_uuid_format(row: dict, actor_uuid_dict) -> dict:
-    if row["Surveyor name"]:
-        row["Surveyor name"] = (
-            "[{'resourceId': '"
-            + actor_uuid_dict[row["Surveyor name"]]
-            + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
-        )
-    if row["Threat assessor name"]:
-        row["Threat assessor name"] = (
-            "[{'resourceId': '"
-            + actor_uuid_dict[row["Threat assessor name"]]
-            + "','ontologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P11_had_participant', 'resourceXresourceId': '','inverseOntologyProperty': 'http://www.cidoc-crm.org/cidoc-crm/P140_assigned_attribute_to'}]"
-        )
-    return row
-
-
-def clean_geomtry_based_on_type(row: dict) -> dict:
-    geometry = row["Geometry type"]
-    if geometry:
-        geometry_type = geometry.split(" ")[0]
-        if geometry_type == "POINT":
-            return row
-        if (
-            geometry_type == "POLYGON"
-        ):  # Add this to avoid the error but not sure if solved it
-            return row
-        if (
-            geometry_type == "LINESTRING"
-        ):  # Add this to avoid the error but not sure if solved it
-            return row
-        elif geometry_type == "MULTIPOLYGON":
-            row["Geometry type"] = remove_duplicate_points(geometry)
-            return row
-        else:
-            print("Unknown geometry type: " + geometry_type)
-    else:
-        return row
-
-
-def remove_duplicate_points(geometry_wkt: str) -> str:
-    if not geometry_wkt:
-        return ""
-
-    if type(geometry_wkt) == str:
-        geometry = wkt.loads(geometry_wkt)
-    else:
-        geometry = geometry_wkt
-
-    seen_points = set()
-
-    if isinstance(geometry, MultiPolygon):
-        new_polygons = []
-        for polygon in geometry.geoms:
-            new_polygon = remove_duplicate_points(polygon)
-            new_polygons.append(new_polygon)
-        return MultiPolygon(new_polygons)
-    elif isinstance(geometry, Polygon):
-        new_exterior = []
-        for point in geometry.exterior.coords:
-            if point not in seen_points:
-                seen_points.add(point)
-                new_exterior.append(point)
-        new_interiors = []
-        for interior in geometry.interiors:
-            new_interior = []
-            for point in interior.coords:
-                if point not in seen_points:
-                    seen_points.add(point)
-                    new_interior.append(point)
-            new_interiors.append(new_interior)
-
-        return Polygon(shell=new_exterior, holes=new_interiors)
-    else:
-        return geometry
-
-
 if __name__ == "__main__":
-    read_input_csv()
+    # read_input_csv()
+    csv_file_cleaner_instance = csv_cleaner(input_csv_file)
+    csv_file_cleaner_instance.add_resource_id_column
+    csv_file_cleaner_instance.write_output_csv()
