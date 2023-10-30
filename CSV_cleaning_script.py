@@ -144,7 +144,7 @@ class csv_cleaner:
         if isinstance(geometry, MultiPolygon):
             new_polygons = []
             for polygon in geometry.geoms:
-                new_polygon = remove_duplicate_points(polygon)
+                new_polygon = self.remove_duplicate_points(polygon)
                 new_polygons.append(new_polygon)
             return MultiPolygon(new_polygons)
         elif isinstance(geometry, Polygon):
