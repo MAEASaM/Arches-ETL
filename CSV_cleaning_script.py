@@ -84,7 +84,9 @@ class csv_cleaner:
 
     def covert_date_format(self, date_str: str) -> str:
         try:
-            date_obj = datetime.strptime(date_str, "%Y/%m/%d")
+            date_obj = datetime.strptime(
+                date_str, "%d/%m/%Y", "%Y/%m/%d", "%Y-%m-%d", "%m/%d/%Y", "%d-%m"
+            )
             return date_obj.strftime("%Y-%m-%d")
         except ValueError:
             return date_str
