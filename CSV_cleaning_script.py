@@ -3,19 +3,19 @@
 
 # TODO:
 # 1. Refactor actor_uuid_format function to generate the actor dict only once # Done
-# 2. Add check for the geomtry and fix duplicate point problem
-# 3. split the filtering function to aliases and data fixes
-# 4. generalise the script to work with other csv files
-# 5. Allow for multiple date formates to be corrected to the require formate
-# 6. Add section that orgnises the MAEASaM ID numericaly from the input csv
-
+# 2. Add check for the geometry and fix duplicate point problem
+# 3. Split the filtering function to aliases and data fixes
+# 4. Generalize the script to work with other CSV files
+# 5. Allow for multiple date formats to be corrected to the required format
+# 6. Add section that organizes the MAEASaM ID numerically from the input CSV
 
 # Data sheets
 
-input_csv_file = "Sudan_BulkUploadTrial (1).csv"
-output_csv_file = "zim_modified.csv"
+input_csv_file = "E:\\MAEASaM\\MAEASaM_desktop\\Arches\\Arches Git\\Arches-ETL\\MaliGeomCorrected.csv"
+output_csv_file = (
+    "E:\\MAEASaM\\MAEASaM_desktop\\Arches\\Arches Git\\Arches-ETL\\arches_modified.csv"
+)
 actor_csv_file = "Actor.csv"
-
 
 import pandas as pd
 import csv
@@ -23,7 +23,6 @@ from datetime import datetime
 import pathlib
 from shapely import wkt
 from shapely.geometry import MultiPolygon, Polygon, Point
-
 
 # find the path of the script
 script_path = pathlib.Path(__file__).parent.absolute()
@@ -37,8 +36,8 @@ actor_csv_file = script_path / actor_csv_file
 class csv_cleaner:
     def __init__(self, main_input_file):
         self.main_input_df = pd.read_csv(main_input_file)
-        self.working_drictory = pathlib.Path(main_input_file).parent.absolute()
-        self.output_csv_name_and_directory = self.working_drictory / (
+        self.working_directory = pathlib.Path(main_input_file).parent.absolute()
+        self.output_csv_name_and_directory = self.working_directory / (
             pathlib.Path(main_input_file).stem + "_cleaned.csv"
         )
 
@@ -50,18 +49,18 @@ class csv_cleaner:
         ).to_dict()
         return name_uuid_supportive_dict
 
-    def read_replacment_supportive_file(self, file_name: str or pathlib.Path) -> dict:
+    def read_replacement_supportive_file(self, file_name: str or pathlib.Path) -> dict:
         name_uuid_supportive_file = pd.read_csv(file_name)
         return name_uuid_supportive_file
 
     def check_for_resource_id_column(self) -> bool:
-        return "ResourceID" in self.main_input_df.keys()
+        return "ResourceID" in self.main_input_df.columns
 
     def add_resource_id_column(self) -> None:
         if not self.check_for_resource_id_column():
             self.main_input_df["ResourceID"] = self.main_input_df["MAEASaM ID"]
 
-    def add_resource_instace_json(
+    def add_resource_instance_json(
         self,
         value_uuid_dict: dict,
         col_name: str,
@@ -82,52 +81,74 @@ class csv_cleaner:
             else ""
         )
 
-    def covert_date_format(self, date_str: str) -> str:
+    def convert_date_format(self, date_str: str) -> str:
         try:
-            date_obj = datetime.strptime(
-                date_str, "%d/%m/%Y", "%Y/%m/%d", "%Y-%m-%d", "%m/%d/%Y", "%d-%m"
-            )
+            date_obj = datetime.strptime(date_str, "%d/%m/%Y")
+            return date_obj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+        try:
+            date_obj = datetime.strptime(date_str, "%Y/%m/%d")
+            return date_obj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+        try:
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            return date_obj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+        try:
+            date_obj = datetime.strptime(date_str, "%m/%d/%Y")
+            return date_obj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+        try:
+            date_obj = datetime.strptime(date_str, "%d-%m")
             return date_obj.strftime("%Y-%m-%d")
         except ValueError:
             return date_str
 
-    def date_format_list_of_coloums(self, row: dict, date_cloumn_names: list) -> None:
-        for date_cloumn_name in date_cloumn_names:
-            self.main_input_df[date_cloumn_name] = self.main_input_df[
-                date_cloumn_name
-            ].apply(self.covert_date_format)
+    def date_format_list_of_columns(self, row: dict, date_column_names: list) -> None:
+        for date_column_name in date_column_names:
+            self.main_input_df[date_column_name] = self.main_input_df[
+                date_column_name
+            ].apply(self.convert_date_format)
 
-    def replace_value_in_coloum(
-        self, coloum_name: str, old_value: str, new_value: str
+    def replace_value_in_column(
+        self, column_name: str, old_value: str, new_value: str
     ) -> None:
-        self.main_input_df[coloum_name] = self.main_input_df[coloum_name].replace(
+        self.main_input_df[column_name] = self.main_input_df[column_name].replace(
             old_value, new_value
         )
 
-    def stream_replace_value_in_coloum(self, replacement_df: pd.DataFrame) -> None:
+    def stream_replace_value_in_column(self, replacement_df: pd.DataFrame) -> None:
         for index, row in replacement_df.iterrows():
-            self.replace_value_in_coloum(
-                row["coloum_name"], row["old_value"], row["new_value"]
+            self.replace_value_in_column(
+                row["column_name"], row["old_value"], row["new_value"]
             )
 
-    def copy_value_from_coloum_to_coloum_on_optioanl_condation(
-        self, source_coloum_name: str, target_coloum_name: str, condation_value: str
+    def copy_value_from_column_to_column_on_optional_condition(
+        self, source_column_name: str, target_column_name: str, condition_value: str
     ) -> None:
-        self.main_input_df[target_coloum_name] = self.main_input_df.apply(
-            lambda x: x[target_coloum_name]
-            if x[condation_value]
-            else x[source_coloum_name],
+        self.main_input_df[target_column_name] = self.main_input_df.apply(
+            lambda x: x[target_column_name]
+            if x[condition_value]
+            else x[source_column_name],
             axis=1,
         )
 
-    def stream_copy_value_from_coloum_to_coloum(
+    def stream_copy_value_from_column_to_column(
         self, replacement_df: pd.DataFrame
     ) -> None:
         for index, row in replacement_df.iterrows():
-            self.copy_value_from_coloum_to_coloum_on_optioanl_condation(
-                row["source_coloum_name"],
-                row["target_coloum_name"],
-                row["condation_value"],
+            self.copy_value_from_column_to_column_on_optional_condition(
+                row["source_column_name"],
+                row["target_column_name"],
+                row["condition_value"],
             )
 
     def remove_duplicate_points(self, geometry_wkt: str) -> str:
@@ -144,7 +165,7 @@ class csv_cleaner:
         if isinstance(geometry, MultiPolygon):
             new_polygons = []
             for polygon in geometry.geoms:
-                new_polygon = remove_duplicate_points(polygon)
+                new_polygon = self.remove_duplicate_points(polygon)
                 new_polygons.append(new_polygon)
             return MultiPolygon(new_polygons)
         elif isinstance(geometry, Polygon):
@@ -166,10 +187,10 @@ class csv_cleaner:
         else:
             return geometry
 
-    def clean_geomtry_based_on_type(
+    def clean_geometry_based_on_type(
         self, geometry_column_name: str = "geometry"
-    ) -> dict:
-        # currently cleans only the multipolygon geometry. Needs more to be gneneralized for other types
+    ) -> None:
+        # currently cleans only the multipolygon geometry. Needs more to be generalized for other types
         self.main_input_df[geometry_column_name] = self.main_input_df[
             geometry_column_name
         ].apply(
@@ -186,41 +207,41 @@ class csv_cleaner:
     def clean_file(
         self,
         name_uuid_supportive_file=None,
-        resource_instace_column_list=[],
-        replacment_supportive_file=None,
-        date_format_coloums=[],
+        resource_instance_column_list=[],
+        replacement_supportive_file=None,
+        date_format_columns=[],
     ) -> None:
-        if name_uuid_supportive_file and len(resource_instace_column_list) > 0:
+        if name_uuid_supportive_file and len(resource_instance_column_list) > 0:
             name_uuid_supportive_dict = self.read_name_uuid_supportive_file(
                 name_uuid_supportive_file
             )
-            for resource_instace_column in resource_instace_column_list:
-                self.add_resource_instace_json(
-                    name_uuid_supportive_dict, resource_instace_column
+            for resource_instance_column in resource_instance_column_list:
+                self.add_resource_instance_json(
+                    name_uuid_supportive_dict, resource_instance_column
                 )
-        if replacment_supportive_file:
-            replacment_supportive_df = self.read_replacment_supportive_file(
-                replacment_supportive_file
+        if replacement_supportive_file:
+            replacement_supportive_df = self.read_replacement_supportive_file(
+                replacement_supportive_file
             )
             if all(
-                x in replacment_supportive_file.keys
-                for x in ["condation_value", "target_coloum_name", "source_coloum_name"]
+                x in replacement_supportive_df.columns
+                for x in ["condition_value", "target_column_name", "source_column_name"]
             ):
-                self.stream_copy_value_from_coloum(replacment_supportive_df)
+                self.stream_copy_value_from_column(replacement_supportive_df)
             elif all(
-                x in replacment_supportive_file.keys
-                for x in ["old_value", "new_value", "coloum_name"]
+                x in replacement_supportive_df.columns
+                for x in ["old_value", "new_value", "column_name"]
             ):
-                self.stream_replace_value_in_coloum(replacment_supportive_df)
+                self.stream_replace_value_in_column(replacement_supportive_df)
             else:
                 pass
-        if len(date_format_coloums) > 0:
-            self.date_format_list_of_coloums(date_format_coloums)
-        self.clean_geomtry_based_on_type()
+        if len(date_format_columns) > 0:
+            self.date_format_list_of_columns(date_format_columns)
+        self.clean_geometry_based_on_type()
         self.write_output_csv()
 
 
-def date_format_all_coloums(row: dict) -> dict:
+def date_format_all_columns(row: dict) -> dict:
     row["Date of imagery"] = row["Date of imagery"].replace("20XX", row["Survey date"])
     row["Date of imagery"] = row["Date of imagery"].replace(
         "1900-01-00", row["Survey date"]
@@ -247,12 +268,16 @@ def write_output_csv(file_reader: csv.DictReader) -> None:
             if not missing_resource_id:
                 row["Geometry type"] = row[
                     "WKT"
-                ]  # This is just a fix for my csv. We will have to change it to do this only if a WKT coloum is pressent
+                ]  # This is just a fix for my csv. We will have to change it to do this only if a WKT coloum is present
 
             row = data_filter(row)
-            row = date_format_all_coloums(row)
+            row = date_format_all_columns(
+                row
+            )  # Uncomment this line to apply date formatting
             row = actor_uuid_format(row, actor_uuid_dict)
-            row = clean_geomtry_based_on_type(row)
+            row = clean_geometry_based_on_type(
+                row
+            )  # Uncomment this line to clean geometry based on type
             writer.writerow(row)
 
 
@@ -369,5 +394,5 @@ def data_filter(row: dict) -> dict:
 if __name__ == "__main__":
     # read_input_csv()
     csv_file_cleaner_instance = csv_cleaner(input_csv_file)
-    csv_file_cleaner_instance.add_resource_id_column
+    csv_file_cleaner_instance.add_resource_id_column()
     csv_file_cleaner_instance.write_output_csv()

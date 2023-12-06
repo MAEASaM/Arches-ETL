@@ -1,8 +1,10 @@
 import csv
 
 # Define the input and output file paths
-input_file_path = "E:\\MAEASaM\\MAEASaM_desktop\\Arches\\Arches Git\\Arches-ETL\\MaliGeomCorrected.csv"
-output_file_path = "E:\\MAEASaM\\MAEASaM_desktop\\Arches\\Arches Git\\Arches-ETL\\MaliGeomCorrectedSorted.csv"
+input_file_path = (
+    "E:\\MAEASaM\\MAEASaM_desktop\\Arches\\Arches Git\\KenyaAngelaCombined.csv"
+)
+output_file_path = "E:\\MAEASaM\\MAEASaM_desktop\\Arches\\Arches Git\\Arches-ETL\\KenyaAngelaCombinedSorted.csv"
 
 # Initialize fieldnames as an empty list
 fieldnames = []
@@ -34,7 +36,7 @@ id_index = fieldnames.index("MAEASaM ID")
 for i, row in enumerate(data_rows):
     original_id = row[id_index]
 
-    new_id = f"RS-MLI-{next_id:08d}"
+    new_id = f"RS-KEN-{next_id:08d}"
     id_mapping[original_id] = new_id
     data_rows[i][id_index] = new_id
     next_id += 1

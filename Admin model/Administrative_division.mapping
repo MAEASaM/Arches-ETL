@@ -1,0 +1,86 @@
+{
+    "resource_model_id": "85026a93-77d9-11ec-ba7b-fa163e7d893d",
+    "resource_model_name": "Administrative division",
+    "nodes": [
+        {
+            "arches_nodeid": "0862d65a-77db-11ec-ba7b-fa163e7d893d",
+            "arches_node_name": "Comment",
+            "file_field_name": "Comment",
+            "data_type": "string",
+            "export": true
+        },
+        {
+            "arches_nodeid": "ce9ee468-77da-11ec-ba7b-fa163e7d893d",
+            "arches_node_name": "Description",
+            "file_field_name": "Description",
+            "data_type": "string",
+            "export": true
+        },
+        {
+            "arches_nodeid": "e9094f1e-77da-11ec-ba7b-fa163e7d893d",
+            "arches_node_name": "Geometry",
+            "file_field_name": "Geometry",
+            "data_type": "geojson-feature-collection",
+            "export": true
+        },
+        {
+            "arches_nodeid": "6d81b354-77da-11ec-ba7b-fa163e7d893d",
+            "arches_node_name": "Level",
+            "file_field_name": "Level",
+            "data_type": "concept",
+            "concept_export_value": "label",
+            "export": true
+        },
+        {
+            "arches_nodeid": "1e493b9e-77db-11ec-ba7b-fa163e7d893d",
+            "arches_node_name": "MAEASaM ID",
+            "file_field_name": "MAEASaM ID",
+            "data_type": "string",
+            "export": true
+        },
+        {
+            "arches_nodeid": "1f3183ae-77da-11ec-ba7b-fa163e7d893d",
+            "arches_node_name": "Name type",
+            "file_field_name": "Name type",
+            "data_type": "concept-list",
+            "concept_export_value": "label",
+            "export": true
+        },
+        {
+            "arches_nodeid": "1f3183af-77da-11ec-ba7b-fa163e7d893d",
+            "arches_node_name": "Name value",
+            "file_field_name": "Name value",
+            "data_type": "string",
+            "export": true
+        },
+        {
+            "arches_nodeid": "f083d6ec-958f-11ec-b9c9-fa163e7d893d",
+            "arches_node_name": "Official division",
+            "file_field_name": "Official division",
+            "data_type": "concept",
+            "concept_export_value": "label",
+            "export": true
+        },
+        {
+            "arches_nodeid": "464fdf8b-77da-11ec-ba7b-fa163e7d893d",
+            "arches_node_name": "Resource created at",
+            "file_field_name": "Resource created at",
+            "data_type": "date",
+            "export": true
+        },
+        {
+            "arches_nodeid": "464fdf8a-77da-11ec-ba7b-fa163e7d893d",
+            "arches_node_name": "Resource last modified at",
+            "file_field_name": "Resource last modified at",
+            "data_type": "date",
+            "export": true
+        },
+        {
+            "arches_nodeid": "568a826e-7d18-11ec-ba7b-fa163e7d893d",
+            "arches_node_name": "Source",
+            "file_field_name": "Source",
+            "data_type": "resource-instance-list",
+            "export": true
+        }
+    ]
+}
